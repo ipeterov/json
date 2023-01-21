@@ -160,6 +160,8 @@ class JSONParser:
 
         return value
 
+    def load(self, f):
+        return self.loads(f.read())
 
 
 json = JSONParser()

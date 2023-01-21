@@ -1,14 +1,14 @@
 import pytest
 
-from parser import parser, InvalidJSON
+from parser import json, InvalidJSON
 
 
 def check_example(source, expected):
     if isinstance(expected, type) and issubclass(expected, Exception):
         with pytest.raises(expected):
-            parser.parse(source)
+            json.loads(source)
     else:
-        assert parser.parse(source) == expected
+        assert json.loads(source) == expected
 
 
 @pytest.mark.parametrize(
@@ -105,3 +105,8 @@ def test_object(source, expected):
 )
 def test_literals(source, expected):
     check_example(source, expected)
+
+
+def test_load():
+    with open("example.json") as f:
+        assert json.load(f) == {"qwerty": "asd"}
