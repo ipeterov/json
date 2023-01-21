@@ -27,6 +27,9 @@ def test_number(source, expected):
     "source, expected",
     [
         ('"qwerty"', "qwerty"),
+        ('""', ""),
+        ('"a/*b*/c/*d//e"', "a/*b*/c/*d//e"),
+        ("", InvalidJSON),
     ],
 )
 def test_string(source, expected):
@@ -76,6 +79,8 @@ def test_array(source, expected):
         ('{"id":0,,,,,}', InvalidJSON),
         ('{"":', InvalidJSON),
         ("{}}", InvalidJSON),
+        ('{"a":"b"}/**/', InvalidJSON),
+        ('{"a":/*comment*/"b"}', InvalidJSON),
     ],
 )
 def test_object(source, expected):
