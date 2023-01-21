@@ -13,7 +13,7 @@ class UnexpectedSymbol(InvalidJSON):
         super().__init__(self.message)
 
 
-VALUE = '{["' + string.digits
+VALUE = '{["tfn' + string.digits
 VALUE_OR_ARRAY_AND = VALUE + "]"
 KEY = '"'
 KEY_OR_OBJECT_END = KEY + "}"
@@ -52,9 +52,11 @@ class JSONParser:
             return self.array_handler()
         if symbol == '"':
             return self.string_handler()
-
-        self.push_back(symbol)
-        return self.number_handler()
+        if symbol in string.digits:
+            self.push_back(symbol)
+            return self.number_handler()
+        if symbol in "tfn":
+            return self.literal_handler(symbol)
 
     def push_back(self, symbol):
         self.iterator = itertools.chain([symbol], self.iterator)
@@ -68,6 +70,23 @@ class JSONParser:
                 return symbol
 
             raise UnexpectedSymbol(symbol)
+
+    def literal_handler(self, first_symbol):
+        literals = {
+            "t": ("rue", True),
+            "f": ("alse", False),
+            "n": ("ull", None),
+        }
+
+        remaining, value = literals[first_symbol]
+
+        while remaining and (symbol := next(self.iterator)):
+            if symbol != remaining[0]:
+                raise UnexpectedSymbol(symbol)
+
+            remaining = remaining[1:]
+
+        return value
 
     def string_handler(self):
         letters = []
