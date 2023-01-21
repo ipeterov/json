@@ -1,5 +1,5 @@
-import itertools
 import string
+from itertools import chain
 
 
 class InvalidJSON(ValueError):
@@ -27,41 +27,10 @@ class JSONParser:
     def __init__(self):
         self.iterator = None
 
-    def parse(self, text: str):
-        self.iterator = text.__iter__()
+    def _push_back(self, symbol):
+        self.iterator = chain([symbol], self.iterator)
 
-        try:
-            value = self.value_handler()
-        except StopIteration:
-            raise InvalidJSON()
-
-        try:
-            self.skip_whitespace(expected_symbols=[])
-        except StopIteration:
-            pass
-        else:
-            raise InvalidJSON()
-
-        return value
-
-    def value_handler(self):
-        symbol = self.skip_whitespace(VALUE)
-        if symbol == "{":
-            return self.object_handler()
-        if symbol == "[":
-            return self.array_handler()
-        if symbol == '"':
-            return self.string_handler()
-        if symbol in string.digits:
-            self.push_back(symbol)
-            return self.number_handler()
-        if symbol in "tfn":
-            return self.literal_handler(symbol)
-
-    def push_back(self, symbol):
-        self.iterator = itertools.chain([symbol], self.iterator)
-
-    def skip_whitespace(self, expected_symbols):
+    def _skip_whitespace(self, expected_symbols):
         while symbol := next(self.iterator):
             if symbol in string.whitespace:
                 continue
@@ -71,7 +40,21 @@ class JSONParser:
 
             raise UnexpectedSymbol(symbol)
 
-    def literal_handler(self, first_symbol):
+    def _parse_value(self):
+        symbol = self._skip_whitespace(VALUE)
+        if symbol == "{":
+            return self._parse_object()
+        if symbol == "[":
+            return self._parse_array()
+        if symbol == '"':
+            return self._parse_stirng()
+        if symbol in string.digits:
+            self._push_back(symbol)
+            return self._parse_number()
+        if symbol in "tfn":
+            return self._parse_literal(symbol)
+
+    def _parse_literal(self, first_symbol):
         literals = {
             "t": ("rue", True),
             "f": ("alse", False),
@@ -88,7 +71,7 @@ class JSONParser:
 
         return value
 
-    def string_handler(self):
+    def _parse_stirng(self):
         letters = []
         while symbol := next(self.iterator):
             if symbol == '"':
@@ -96,11 +79,11 @@ class JSONParser:
             letters.append(symbol)
         return "".join(letters)
 
-    def number_handler(self):
+    def _parse_number(self):
         digits = []
         while symbol := next(self.iterator, None):
             if symbol not in string.digits + ".":
-                self.push_back(symbol)
+                self._push_back(symbol)
                 break
             digits.append(symbol)
         digits = "".join(digits)
@@ -108,7 +91,7 @@ class JSONParser:
             return float(digits)
         return int(digits)
 
-    def array_handler(self):
+    def _parse_array(self):
         array = []
         next_expecting = {
             VALUE_OR_ARRAY_AND: COMMA_OR_ARRAY_END,
@@ -118,18 +101,18 @@ class JSONParser:
 
         expecting = VALUE_OR_ARRAY_AND
         while True:
-            symbol = self.skip_whitespace(expecting)
+            symbol = self._skip_whitespace(expecting)
 
             if symbol == "]":
                 return array
 
             if expecting in {VALUE_OR_ARRAY_AND, VALUE}:
-                self.push_back(symbol)
-                array.append(self.value_handler())
+                self._push_back(symbol)
+                array.append(self._parse_value())
 
             expecting = next_expecting[expecting]
 
-    def object_handler(self):
+    def _parse_object(self):
         obj = {}
         next_expecting = {
             KEY_OR_OBJECT_END: COLON,
@@ -142,18 +125,38 @@ class JSONParser:
         expecting = KEY_OR_OBJECT_END
         current_key = None
         while True:
-            symbol = self.skip_whitespace(expecting)
+            symbol = self._skip_whitespace(expecting)
 
             if symbol == "}":
                 return obj
 
             if expecting in {KEY, KEY_OR_OBJECT_END}:
-                current_key = self.string_handler()
+                current_key = self._parse_stirng()
             elif expecting == VALUE:
-                self.push_back(symbol)
-                obj[current_key] = self.value_handler()
+                self._push_back(symbol)
+                obj[current_key] = self._parse_value()
 
             expecting = next_expecting[expecting]
 
+    def parse(self, text: str):
+        self.iterator = text.__iter__()
+
+        try:
+            value = self._parse_value()
+        except StopIteration:
+            raise InvalidJSON()
+
+        try:
+            self._skip_whitespace(expected_symbols=[])
+        except StopIteration:
+            pass
+        else:
+            raise InvalidJSON()
+
+        return value
+
 
 parser = JSONParser()
+
+
+__all__ = ["parser", "InvalidJSON", "UnexpectedSymbol"]
