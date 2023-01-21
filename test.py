@@ -85,8 +85,16 @@ def test_object(source, expected):
     "source, expected",
     [
         ("null", None),
+        ("n", InvalidJSON),
+        ("none", InvalidJSON),
+        ("Null", InvalidJSON),
         ("true", True),
+        ("t", InvalidJSON),
+        ("True", InvalidJSON),
         ("false", False),
+        ("fa", InvalidJSON),
+        ("False", InvalidJSON),
+        ("something", InvalidJSON),
     ],
 )
 def test_literals(source, expected):
