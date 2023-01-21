@@ -48,12 +48,20 @@ class JSONParser:
         if symbol == "[":
             return self._parse_array()
         if symbol == '"':
-            return self._parse_stirng()
-        if symbol in string.digits:
+            return self._parse_string()
+        if symbol in DIGITS:
             self._push_back(symbol)
             return self._parse_number()
         if symbol in "tfn":
             return self._parse_literal(symbol)
+
+    def _parse_string(self):
+        letters = []
+        while symbol := next(self.iterator):
+            if symbol == '"':
+                break
+            letters.append(symbol)
+        return "".join(letters)
 
     def _parse_literal(self, first_symbol):
         literals = {
@@ -71,14 +79,6 @@ class JSONParser:
             remaining = remaining[1:]
 
         return value
-
-    def _parse_stirng(self):
-        letters = []
-        while symbol := next(self.iterator):
-            if symbol == '"':
-                break
-            letters.append(symbol)
-        return "".join(letters)
 
     def _parse_number(self):
         digits = []
@@ -132,7 +132,7 @@ class JSONParser:
                 return obj
 
             if expecting in {KEY, KEY_OR_OBJECT_END}:
-                current_key = self._parse_stirng()
+                current_key = self._parse_string()
             elif expecting == VALUE:
                 self._push_back(symbol)
                 obj[current_key] = self._parse_value()
