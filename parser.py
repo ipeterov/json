@@ -13,7 +13,7 @@ class UnexpectedSymbol(InvalidJSON):
         super().__init__(self.message)
 
 
-DIGITS = string.digits + "-"
+DIGITS = string.digits + "-+Ee"
 VALUE = '{["tfn' + DIGITS
 VALUE_OR_ARRAY_AND = VALUE + "]"
 KEY = '"'
@@ -87,9 +87,12 @@ class JSONParser:
                 break
             digits.append(symbol)
         digits = "".join(digits)
-        if "." in digits:
-            return float(digits)
-        return int(digits)
+        try:
+            if any(symbol in digits for symbol in ".eE"):
+                return float(digits)
+            return int(digits)
+        except ValueError as e:
+            raise InvalidJSON(str(e))
 
     def _parse_array(self):
         array = []

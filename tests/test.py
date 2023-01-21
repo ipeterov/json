@@ -16,6 +16,15 @@ def check_example(source, expected):
     [
         ("8", 8),
         ("-42", -42),
+        ("0E0", 0e0),
+        ("0e+1", 0e1),
+        ("123.456e-789", 123.456e-789),
+        ("1.0e+", InvalidJSON),
+        ("0E", InvalidJSON),
+        ("1eE2", InvalidJSON),
+        ("0E+", InvalidJSON),
+        (".2e-3", InvalidJSON),
+        ("-237462374673276894279832", -237462374673276894279832),
         ("0x42", InvalidJSON),
     ],
 )
@@ -28,6 +37,7 @@ def test_number(source, expected):
     [
         ('"qwerty"', "qwerty"),
         ('""', ""),
+        (r'"]"', "]"),
         ('"a/*b*/c/*d//e"', "a/*b*/c/*d//e"),
         ("", InvalidJSON),
     ],
