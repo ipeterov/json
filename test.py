@@ -15,6 +15,7 @@ def check_example(source, expected):
     "source, expected",
     [
         ("8", 8),
+        ("-42", -42),
         ("0x42", InvalidJSON),
     ],
 )

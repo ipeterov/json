@@ -13,7 +13,8 @@ class UnexpectedSymbol(InvalidJSON):
         super().__init__(self.message)
 
 
-VALUE = '{["tfn' + string.digits
+DIGITS = string.digits + "-"
+VALUE = '{["tfn' + DIGITS
 VALUE_OR_ARRAY_AND = VALUE + "]"
 KEY = '"'
 KEY_OR_OBJECT_END = KEY + "}"
@@ -82,7 +83,7 @@ class JSONParser:
     def _parse_number(self):
         digits = []
         while symbol := next(self.iterator, None):
-            if symbol not in string.digits + ".":
+            if symbol not in DIGITS + ".":
                 self._push_back(symbol)
                 break
             digits.append(symbol)
