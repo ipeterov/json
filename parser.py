@@ -142,7 +142,7 @@ class JSONParser:
 
             expecting = next_expecting[expecting]
 
-    def parse(self, text: str):
+    def loads(self, text: str):
         self.iterator = text.__iter__()
 
         try:
@@ -150,6 +150,7 @@ class JSONParser:
         except StopIteration:
             raise InvalidJSON()
 
+        # This ensures that we only have whitespace after the value, and not anything else
         try:
             self._skip_whitespace(expected_symbols=[])
         except StopIteration:
@@ -160,7 +161,8 @@ class JSONParser:
         return value
 
 
-parser = JSONParser()
+
+json = JSONParser()
 
 
-__all__ = ["parser", "InvalidJSON", "UnexpectedSymbol"]
+__all__ = ["json", "InvalidJSON", "UnexpectedSymbol"]
