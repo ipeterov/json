@@ -53,7 +53,8 @@ class JSONParser:
             self._push_back(symbol)
             return self._parse_number()
         if symbol in "tfn":
-            return self._parse_literal(symbol)
+            self._push_back(symbol)
+            return self._parse_literal()
 
     def _parse_string(self):
         letters = []
@@ -63,12 +64,14 @@ class JSONParser:
             letters.append(symbol)
         return "".join(letters)
 
-    def _parse_literal(self, first_symbol):
+    def _parse_literal(self):
         literals = {
             "t": ("rue", True),
             "f": ("alse", False),
             "n": ("ull", None),
         }
+
+        first_symbol = next(self.iterator)
 
         remaining, value = literals[first_symbol]
 
