@@ -65,20 +65,16 @@ class JSONParser:
         return "".join(letters)
 
     def _parse_literal(self):
-        literals = {
+        first_symbol = next(self.iterator)
+
+        remaining, value = {
             "t": ("rue", True),
             "f": ("alse", False),
             "n": ("ull", None),
-        }
-
-        first_symbol = next(self.iterator)
-
-        remaining, value = literals[first_symbol]
-
+        }[first_symbol]
         while remaining and (symbol := next(self.iterator)):
             if symbol != remaining[0]:
                 raise UnexpectedSymbol(symbol)
-
             remaining = remaining[1:]
 
         return value
